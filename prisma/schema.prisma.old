@@ -1,0 +1,231 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ------------------------------------------------------
+// ENUMS
+// ------------------------------------------------------
+
+enum Role {
+  CEO
+  CLINICAL_DIRECTOR
+  OPS_DIRECTOR
+  INTAKE_PA_COORDINATOR
+  CASE_COORDINATOR
+  CLINICAL_SUPPORT
+  SESSION_NOTES_COORDINATOR
+  SCHEDULING
+  BILLING
+  BCBA
+  RBT
+}
+
+enum ClientStatus {
+  INQUIRY
+  DOCS_PENDING
+  AUTH_INITIATED
+  AUTHORIZED
+  ACTIVE
+  DISCHARGED
+}
+
+enum DocumentType {
+  REFERRAL
+  DIAGNOSTIC_EVAL
+  PSYCH_EVAL
+  IEP
+  INSURANCE_CARD
+  MEDICAID_CARD
+  CONSENT
+  CUSTODY
+  PRIOR_TREATMENT_PLAN
+  MEET_AND_GREET_FORM
+  OTHER
+}
+
+enum AuthType {
+  ASSESSMENT
+  TREATMENT
+}
+
+enum AuthStatus {
+  PENDING
+  APPROVED
+  DENIED
+  EXPIRED
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ActionStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+// ------------------------------------------------------
+// MODELS
+// ------------------------------------------------------
+
+model User {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  firstName String
+  lastName  String
+  role      Role
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  assignedCases          Client[]       @relation("CaseCoordinator")
+  supervisedClients      Client[]       @relation("BCBASupervisor")
+  sessionsAsRbt          Session[]      @relation("RbtSession")
+  sessionsAsBcba         Session[]      @relation("BcbaSession")
+  assignedActionItems    ActionItem[]   @relation("Assignee")
+  createdActionItems     ActionItem[]   @relation("Creator")
+}
+
+model Client {
+  id              String       @id @default(uuid()) @db.Uuid
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime?
+  insurancePayer  String?
+  memberId        String?
+  medicaidId      String?
+  status          ClientStatus @default(INQUIRY)
+  
+  // Contacts
+  guardianName    String?
+  guardianPhone   String?
+  guardianEmail   String?
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Clinical & Ops Team
+  caseCoordinatorId String?    @db.Uuid
+  bcbaId            String?    @db.Uuid
+  
+  caseCoordinator   User?      @relation("CaseCoordinator", fields: [caseCoordinatorId], references: [id])
+  bcba              User?      @relation("BCBASupervisor", fields: [bcbaId], references: [id])
+
+  // Relations
+  documents       Document[]
+  authorizations  Authorization[]
+  sessions        Session[]
+}
+
+model Document {
+  id             String       @id @default(uuid()) @db.Uuid
+  clientId       String       @db.Uuid
+  type           DocumentType
+  fileUrl        String?
+  expirationDate DateTime?
+  isVerified     Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  client         Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model Authorization {
+  id             String       @id @default(uuid()) @db.Uuid
+  clientId       String       @db.Uuid
+  type           AuthType
+  status         AuthStatus   @default(PENDING)
+  authNumber     String?
+  startDate      DateTime?
+  endDate        DateTime?
+  unitsRequested Int?
+  unitsApproved  Int?
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  client         Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  cptCodes       AuthCptCode[]
+}
+
+model AuthCptCode {
+  id              String        @id @default(uuid()) @db.Uuid
+  authorizationId String        @db.Uuid
+  code            String        // e.g. 97151, 97153
+  unitsApproved   Int?
+
+  authorization   Authorization @relation(fields: [authorizationId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id              String        @id @default(uuid()) @db.Uuid
+  clientId        String        @db.Uuid
+  rbtId           String?       @db.Uuid
+  bcbaId          String?       @db.Uuid
+  
+  status          SessionStatus @default(SCHEDULED)
+  scheduledStart  DateTime
+  scheduledEnd    DateTime
+  actualStart     DateTime?
+  actualEnd       DateTime?
+  
+  cptCode         String?       // e.g. 97153
+  location        String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  rbt             User?         @relation("RbtSession", fields: [rbtId], references: [id])
+  bcba            User?         @relation("BcbaSession", fields: [bcbaId], references: [id])
+  note            SessionNote?
+}
+
+model SessionNote {
+  id              String    @id @default(uuid()) @db.Uuid
+  sessionId       String    @unique @db.Uuid
+  
+  rbtSigned       Boolean   @default(false)
+  parentSigned    Boolean   @default(false)
+  bcbaSigned      Boolean   @default(false)
+  
+  clinicalContent String?   @db.Text
+  isConverted     Boolean   @default(false) // Billable status
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  session         Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model ActionItem {
+  id          String       @id @default(uuid()) @db.Uuid
+  title       String
+  description String?      @db.Text
+  status      ActionStatus @default(OPEN)
+  dueDate     DateTime?
+
+  assigneeId  String?      @db.Uuid
+  creatorId   String       @db.Uuid
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  assignee    User?        @relation("Assignee", fields: [assigneeId], references: [id])
+  creator     User         @relation("Creator", fields: [creatorId], references: [id])
+}

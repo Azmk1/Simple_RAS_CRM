@@ -1,0 +1,1 @@
+ALTER TABLE "IntakePacket" ADD COLUMN IF NOT EXISTS "formData" JSONB DEFAULT '{}';

@@ -1,0 +1,468 @@
+// Shared Prisma schema for @repo/db
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ------------------------------------------------------
+// ENUMS
+// ------------------------------------------------------
+
+enum Role {
+  CEO
+  CLINICAL_DIRECTOR
+  OPS_DIRECTOR
+  INTAKE_PA_COORDINATOR
+  CASE_COORDINATOR
+  CLINICAL_SUPPORT
+  BILLING
+  BCBA
+  RBT
+  HR
+  HEAD_HR
+  HR_AGENT
+  FINANCE
+}
+
+enum ClientStatus {
+  INQUIRY
+  MAGIC_LINK_SENT
+  DOCS_SUBMITTED
+  DOCS_APPROVED_INTAKE
+  CLINICAL_REVIEW_APPROVED
+  VOB_COMPLETED
+  PA_SUBMITTED
+  PA_APPROVED
+  ASSESSMENT_SCHEDULED
+  REPORT_ASSEMBLED
+  TX_PA_SUBMITTED
+  TX_PA_APPROVED
+  STAFFING_PENDING
+  ACTIVE
+  DISCHARGED
+}
+
+enum IntakePacketStatus {
+  PENDING_CLIENT_SUBMISSION
+  SUBMITTED
+  REJECTED_BY_INTAKE
+  REJECTED_BY_CLINICAL
+  APPROVED
+}
+
+enum PARequestStatus {
+  NOT_STARTED
+  SUBMITTED
+  DENIED_CLERICAL
+  DENIED_CLINICAL
+  APPROVED
+}
+
+enum DocumentType {
+  REFERRAL
+  DIAGNOSTIC_EVAL
+  PSYCH_EVAL
+  IEP
+  INSURANCE_CARD
+  MEDICAID_CARD
+  CONSENT
+  CUSTODY
+  PRIOR_TREATMENT_PLAN
+  MEET_AND_GREET_FORM
+  OTHER
+}
+
+enum AuthType {
+  ASSESSMENT
+  TREATMENT
+}
+
+enum AuthStatus {
+  PENDING
+  APPROVED
+  DENIED
+  EXPIRED
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ActionStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum ContactMethod {
+  PHONE
+  EMAIL
+  IN_PERSON
+  VIDEO
+  PORTAL
+}
+
+enum DeficiencyStatus {
+  OPEN
+  RESOLVED
+}
+
+// ------------------------------------------------------
+// MODELS
+// ------------------------------------------------------
+
+model User {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  firstName String
+  lastName  String
+  role      Role
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  assignedCases          Client[]         @relation("CaseCoordinator")
+  supportedClients       Client[]         @relation("ClinicalSupport")
+  supervisedClients      Client[]         @relation("BCBASupervisor")
+  clientsAsRbt           Client[]         @relation("RBT")
+  sessionsAsRbt          Session[]        @relation("RbtSession")
+  sessionsAsBcba         Session[]        @relation("BcbaSession")
+  assignedActionItems    ActionItem[]     @relation("Assignee")
+  createdActionItems     ActionItem[]     @relation("Creator")
+  contactLogs            ContactLog[]
+  rbtOnboardings         RbtOnboarding[]
+  deficienciesToFix      NoteDeficiency[] @relation("DeficiencyAuthor")
+  deficienciesFlagged    NoteDeficiency[] @relation("DeficiencyFlagger")
+  sentMessages           StaffMessage[]   @relation("StaffMessageSender")
+  receivedMessages       StaffMessage[]   @relation("StaffMessageReceiver")
+  notifications          Notification[]
+}
+
+model Client {
+  id              String       @id @default(uuid()) @db.Uuid
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime?
+  childGender     String?
+  childAge        Int?
+  
+  insurancePayer  String?
+  memberId        String?
+  medicaidId      String?
+  status          ClientStatus @default(INQUIRY)
+  
+  // Contacts
+  guardianName    String?
+  parentGender    String?
+  parentAddress   String?
+  guardianPhone   String?
+  guardianEmail   String?
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Clinical & Ops Team
+  caseCoordinatorId String?    @db.Uuid
+  clinicalSupportId String?    @db.Uuid
+  bcbaId            String?    @db.Uuid
+  rbtId             String?    @db.Uuid
+  rbtApproved       Boolean    @default(false)
+  
+  caseCoordinator   User?      @relation("CaseCoordinator", fields: [caseCoordinatorId], references: [id])
+  clinicalSupport   User?      @relation("ClinicalSupport", fields: [clinicalSupportId], references: [id])
+  bcba              User?      @relation("BCBASupervisor", fields: [bcbaId], references: [id])
+  rbt               User?      @relation("RBT", fields: [rbtId], references: [id])
+
+  // Relations
+  documents       Document[]
+  authorizations  Authorization[]
+  sessions        Session[]
+  contactLogs     ContactLog[]
+  rbtOnboarding   RbtOnboarding?
+  
+  intakePacket    IntakePacket?
+  paRequests      PARequest[]
+  messages        ClientMessage[]
+  actionItems     ActionItem[]
+  treatmentPlan   Json?        @default("{}")
+}
+
+model Document {
+  id             String       @id @default(uuid()) @db.Uuid
+  clientId       String       @db.Uuid
+  type           DocumentType
+  fileUrl        String?
+  expirationDate DateTime?
+  isVerified     Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  client         Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model Authorization {
+  id             String       @id @default(uuid()) @db.Uuid
+  clientId       String       @db.Uuid
+  type           AuthType
+  status         AuthStatus   @default(PENDING)
+  authNumber     String?
+  startDate      DateTime?
+  endDate        DateTime?
+  unitsRequested Int?
+  unitsApproved  Int?
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  client         Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  cptCodes       AuthCptCode[]
+}
+
+model AuthCptCode {
+  id              String        @id @default(uuid()) @db.Uuid
+  authorizationId String        @db.Uuid
+  code            String        // e.g. 97151, 97153
+  unitsApproved   Int?
+
+  authorization   Authorization @relation(fields: [authorizationId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id              String        @id @default(uuid()) @db.Uuid
+  clientId        String        @db.Uuid
+  rbtId           String?       @db.Uuid
+  bcbaId          String?       @db.Uuid
+  
+  status          SessionStatus @default(SCHEDULED)
+  scheduledStart  DateTime
+  scheduledEnd    DateTime
+  actualStart     DateTime?
+  actualEnd       DateTime?
+  
+  cptCode         String?       // e.g. 97153
+  location        String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  rbt             User?         @relation("RbtSession", fields: [rbtId], references: [id])
+  bcba            User?         @relation("BcbaSession", fields: [bcbaId], references: [id])
+  note            SessionNote?
+}
+
+model SessionNote {
+  id              String    @id @default(uuid()) @db.Uuid
+  sessionId       String    @unique @db.Uuid
+  
+  rbtSigned       Boolean   @default(false)
+  parentSigned    Boolean   @default(false)
+  bcbaSigned      Boolean   @default(false)
+  
+  clinicalContent String?   @db.Text
+  isConverted     Boolean   @default(false) // Billable status
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  session         Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  deficiencies    NoteDeficiency[]
+}
+
+model ActionItem {
+  id          String       @id @default(uuid()) @db.Uuid
+  title       String
+  description String?      @db.Text
+  status      ActionStatus @default(OPEN)
+  dueDate     DateTime?
+
+  assigneeId  String?      @db.Uuid
+  creatorId   String?      @db.Uuid
+  clientId    String?      @db.Uuid
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  assignee    User?        @relation("Assignee", fields: [assigneeId], references: [id])
+  creator     User?        @relation("Creator", fields: [creatorId], references: [id])
+  client      Client?      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model ContactLog {
+  id          String        @id @default(uuid()) @db.Uuid
+  clientId    String        @db.Uuid
+  authorId    String        @db.Uuid
+  method      ContactMethod
+  subject     String
+  outcome     String        @db.Text
+  nextStep    String?       @db.Text
+  
+  createdAt   DateTime      @default(now())
+
+  client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  author      User          @relation(fields: [authorId], references: [id])
+}
+
+model RbtOnboarding {
+  id                  String   @id @default(uuid()) @db.Uuid
+  clientId            String   @unique @db.Uuid
+  rbtId               String   @db.Uuid
+
+  bacbVerified        Boolean  @default(false)
+  backgroundCleared   Boolean  @default(false)
+  trainingsComplete   Boolean  @default(false)
+  artemisAccountSetup Boolean  @default(false)
+  payrollComplete     Boolean  @default(false)
+  payerCredentialed   Boolean  @default(false)
+  planOrientationDate DateTime?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  client              Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  rbt                 User     @relation(fields: [rbtId], references: [id])
+}
+
+model NoteDeficiency {
+  id          String           @id @default(uuid()) @db.Uuid
+  noteId      String           @db.Uuid
+  authorId    String           @db.Uuid
+  flaggedById String           @db.Uuid
+  
+  description String           @db.Text
+  status      DeficiencyStatus @default(OPEN)
+
+  createdAt   DateTime         @default(now())
+  resolvedAt  DateTime?
+
+  note        SessionNote      @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  author      User             @relation("DeficiencyAuthor", fields: [authorId], references: [id])
+  flaggedBy   User             @relation("DeficiencyFlagger", fields: [flaggedById], references: [id])
+}
+
+model IntakePacket {
+  id              String             @id @default(uuid()) @db.Uuid
+  clientId        String             @unique @db.Uuid
+  magicLinkToken  String?            @unique
+  deviceFingerprint String?
+  status          IntakePacketStatus @default(PENDING_CLIENT_SUBMISSION)
+  
+  // Form checks
+  intakeFormComplete      Boolean @default(false)
+  consentFormComplete     Boolean @default(false)
+  
+  // JSON blob for continuous scrolling form
+  formData                Json?   @default("{}")
+  
+  // Document uploads
+  insuranceCardFrontUploaded Boolean @default(false)
+  insuranceCardBackUploaded  Boolean @default(false)
+  medicaidCardFrontUploaded  Boolean @default(false)
+  medicaidCardBackUploaded   Boolean @default(false)
+  diagnosticEvalUploaded  Boolean @default(false)
+  physicianRxUploaded     Boolean @default(false)
+  iepUploaded             Boolean @default(false)
+  custodyDocsUploaded     Boolean @default(false)
+  priorAbaRecordsUploaded Boolean @default(false)
+
+  rejectionNotes  String? @db.Text
+  rejectionDetails Json?  @default("{}")
+
+  // Client requests
+  clientChangeRequested Boolean @default(false)
+  clientChangeNotes     String? @db.Text
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model PARequest {
+  id                    String          @id @default(uuid()) @db.Uuid
+  clientId              String          @db.Uuid
+  type                  AuthType
+  status                PARequestStatus @default(NOT_STARTED)
+  
+  vobCompleted          Boolean @default(false)
+  providerCredentialed  Boolean @default(false)
+
+  // Final Auth Info
+  authNumber            String?
+  approvedUnits         Int?
+  effectiveDate         DateTime?
+  expirationDate        DateTime?
+  
+  p2pResolved           Boolean  @default(false)
+  p2pNotes              String?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  client                Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model ClientMessage {
+  id          String   @id @default(uuid()) @db.Uuid
+  clientId    String   @db.Uuid
+  content     String   @db.Text
+  isFromClient Boolean @default(false)
+  senderName  String
+  createdAt   DateTime @default(now())
+  readAt      DateTime?
+
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model StaffMessage {
+  id          String   @id @default(uuid()) @db.Uuid
+  senderId    String   @db.Uuid
+  receiverId  String   @db.Uuid
+  content     String   @db.Text
+  createdAt   DateTime @default(now())
+  readAt      DateTime?
+
+  sender      User     @relation("StaffMessageSender", fields: [senderId], references: [id])
+  receiver    User     @relation("StaffMessageReceiver", fields: [receiverId], references: [id])
+}
+
+model GoalTemplate {
+  id          String   @id @default(uuid()) @db.Uuid
+  type        String   // "SKILL", "BRP", "PARENT"
+  
+  // Skill & Parent Fields
+  domain      String?
+  description String?
+  mastery     String?
+
+  // BRP Specific Fields
+  behavior    String?
+  topography  String?
+  function    String?
+  antecedent  String?
+  consequence String?
+
+  authorName  String?
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @db.Uuid
+  title     String
+  message   String   @db.Text
+  type      String   @default("INFO") // INFO, WARNING, ALERT
+  linkUrl   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
