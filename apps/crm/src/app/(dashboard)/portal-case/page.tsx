@@ -1,6 +1,6 @@
 import React from 'react';
 import { prisma } from '@/lib/prisma';
-import IntakeQueue from '@/components/portal-case/IntakeQueue';
+import IntakeDashboard from '@/components/portal-case/IntakeDashboard';
 
 export default async function CasePortalPage() {
   const clients = await prisma.client.findMany({
@@ -10,14 +10,9 @@ export default async function CasePortalPage() {
     orderBy: { updatedAt: 'desc' }
   });
 
-  const coordinators = await prisma.user.findMany({
-    where: { role: 'CASE_COORDINATOR', isActive: true },
-    select: { id: true, firstName: true, lastName: true }
-  });
-
   return (
     <div className="p-8">
-      <IntakeQueue clients={clients} coordinators={coordinators} />
+      <IntakeDashboard clients={clients} />
     </div>
   );
 }

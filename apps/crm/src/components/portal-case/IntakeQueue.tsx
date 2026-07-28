@@ -2,11 +2,10 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/Card';
-import { UserPlus, Mail, FileCheck, ArrowRight, Loader2, UserCheck, Sparkles, Layers, ShieldCheck, Zap } from 'lucide-react';
+import { UserPlus, Mail, FileCheck, ArrowRight, Loader2, UserCheck, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
-import { generateMagicLink, assignCaseCoordinator } from '@/app/(dashboard)/portal-case/actions';
+import { generateMagicLink } from '@/app/(dashboard)/portal-case/actions';
 import { Button } from '@/components/ui/Button';
-import { AreaChartWidget, BarChartWidget, DonutChartWidget } from '@/components/ui/AnalyticsCharts';
 
 export default function IntakeQueue({ clients, coordinators }: { clients: any[], coordinators?: any[] }) {
   const [mounted, setMounted] = React.useState(false);
@@ -27,8 +26,6 @@ export default function IntakeQueue({ clients, coordinators }: { clients: any[],
     'TX_PA_SUBMITTED', 
     'TX_PA_APPROVED'
   ].includes(c.status));
-
-  const magicLinkCompletionPct = clients.length > 0 ? Math.round(((clients.length - waitingQueue.length) / clients.length) * 100) : 100;
 
   const QueueCard = ({ client, title, icon: Icon, desc, action, badge }: { client: any, title: string, icon: any, desc: string, action?: React.ReactNode, badge?: string }) => {
     const unreadCount = client.messages?.filter((m: any) => m.isFromClient && !m.readAt).length || 0;
@@ -74,87 +71,18 @@ export default function IntakeQueue({ clients, coordinators }: { clients: any[],
   };
 
   return (
-    <div className="space-y-8 mt-6 pb-12 animate-fade-in-up">
-      {/* Hero Master Intake Command Banner */}
-      <div className="relative overflow-hidden p-8 rounded-3xl bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-white/10 shadow-2xl backdrop-blur-2xl group">
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-brand-orange-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-10 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange-500/10 border border-brand-orange-500/20 text-brand-orange-400 font-mono text-[11px] font-bold">
-              <span className="dot-live"></span>
-              <span>INTAKE &amp; PA COMMAND CENTER • PARENT PACKET SYNC</span>
-            </div>
-            
-            <h1 className="text-3xl lg:text-4xl font-extrabold text-white font-heading tracking-tight leading-tight">
-              Intake Queue <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-orange-400 via-amber-300 to-teal-300">&amp; Parent Onboarding</span>
-            </h1>
-            
-            <p className="text-sm text-zinc-400 max-w-2xl font-sans leading-relaxed">
-              Track new client inquiries, generate Magic Link parent onboarding portals, verify document approvals, and hand off completed intake packets to Billing.
-            </p>
-          </div>
-
-          {/* Quick Stats Banner */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-shrink-0">
-            <div className="p-3 bg-zinc-900/90 rounded-2xl border border-white/10 backdrop-blur-md">
-              <span className="text-[10px] text-brand-orange-400 font-mono font-bold uppercase block">INQUIRIES</span>
-              <p className="text-xl font-black text-white font-mono mt-0.5">{inquiryQueue.length}</p>
-            </div>
-            <div className="p-3 bg-zinc-900/90 rounded-2xl border border-white/10 backdrop-blur-md">
-              <span className="text-[10px] text-amber-400 font-mono font-bold uppercase block">SENT LINKS</span>
-              <p className="text-xl font-black text-white font-mono mt-0.5">{waitingQueue.length}</p>
-            </div>
-            <div className="p-3 bg-zinc-900/90 rounded-2xl border border-white/10 backdrop-blur-md">
-              <span className="text-[10px] text-rose-400 font-mono font-bold uppercase block">REVIEW REQ</span>
-              <p className="text-xl font-black text-white font-mono mt-0.5">{reviewQueue.length}</p>
-            </div>
-            <div className="p-3 bg-zinc-900/90 rounded-2xl border border-white/10 backdrop-blur-md">
-              <span className="text-[10px] text-emerald-400 font-mono font-bold uppercase block">IN PROGRESS</span>
-              <p className="text-xl font-black text-white font-mono mt-0.5">{inProgressQueue.length}</p>
-            </div>
-          </div>
+    <div className="space-y-6 animate-fade-in-up">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-white font-heading">Intake Operational Queue</h2>
+          <p className="text-xs text-zinc-400 mt-0.5">Manage intake stages, deliver magic links, and verify client packets</p>
         </div>
-      </div>
-
-      {/* Interactive Intake Analytics & Trend Graphs */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <AreaChartWidget
-            title="Monthly Parent Inquiry & Magic Link Velocity"
-            subtitle="Real-time volume trend of incoming leads and parent portal onboarding submissions"
-            color="#FF7A45"
-            data={[
-              { label: 'Jan', value: 14 },
-              { label: 'Feb', value: 22 },
-              { label: 'Mar', value: 31 },
-              { label: 'Apr', value: 45 },
-              { label: 'May', value: 58 },
-              { label: 'Jun', value: 72 },
-              { label: 'Jul', value: clients.length || 85 },
-            ]}
-          />
-        </div>
-
-        <div className="space-y-6">
-          <DonutChartWidget
-            title="Magic Link Completion"
-            percentage={magicLinkCompletionPct}
-            label="Parent Portal Onboarding Rate"
-            color="#FF7A45"
-          />
-          <BarChartWidget
-            title="Intake Stage Distribution"
-            subtitle="Current active queue volume breakdown"
-            data={[
-              { label: '1. Inquiries', value: inquiryQueue.length, color: '#FF7A45' },
-              { label: '2. Sent Links', value: waitingQueue.length, color: '#F59E0B' },
-              { label: '3. Doc Review', value: reviewQueue.length, color: '#F43F5E' },
-              { label: '4. Handoff', value: inProgressQueue.length, color: '#10B981' },
-            ]}
-          />
-        </div>
+        <Link href="/portal-case">
+          <Button className="bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold text-xs px-3.5 h-9 rounded-xl border border-white/10 transition-all cursor-pointer">
+            ← Back to Intake Dashboard
+          </Button>
+        </Link>
       </div>
 
       {/* 4 Pipeline Stage Columns */}
