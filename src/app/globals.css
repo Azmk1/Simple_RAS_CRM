@@ -58,8 +58,11 @@
   --color-border: rgba(255,255,255,0.08);
 }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  max-width: 100vw;
+  overflow-x: hidden !important;
   background:
     radial-gradient(ellipse 900px 600px at 15% -10%, rgba(139,79,140,.22), transparent 60%),
     radial-gradient(ellipse 900px 600px at 85% 110%, rgba(255,122,69,.18), transparent 65%),
@@ -71,6 +74,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 122, 69, 0.4) rgba(6, 7, 13, 0.95);
+}
+
+main {
+  max-width: 100%;
+  overflow-x: hidden !important;
 }
 
 /* Glassmorphism Panel Utilities */
