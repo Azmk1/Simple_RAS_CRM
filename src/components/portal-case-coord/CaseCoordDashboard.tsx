@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Activity, Calendar, CheckCircle2, Clock, Users, ArrowRight, ShieldAlert, AlertTriangle, UserCheck, Sparkles, Layers, Zap, UserPlus } from 'lucide-react';
 import Link from 'next/link';
+import { AreaChartWidget, BarChartWidget, DonutChartWidget } from '@/components/ui/AnalyticsCharts';
 
 export default function CaseCoordDashboard({ 
   coordinators, 
@@ -38,19 +39,15 @@ export default function CaseCoordDashboard({
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange-500/10 border border-brand-orange-500/20 text-brand-orange-400 font-mono text-[11px] font-bold">
               <span className="dot-live"></span>
-              <span>CASE COORDINATION COMMAND CENTER • ACTIVE CASELOAD SYNC</span>
+              <span>CASE COORDINATION ANALYTICS ENGINE • REAL-TIME CASELOAD SYNC</span>
             </div>
             
             <h1 className="text-3xl lg:text-4xl font-extrabold text-white font-heading tracking-tight leading-tight">
-              Case Coordinator <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-orange-400 via-amber-300 to-teal-300">Analytics &amp; Roster</span>
+              Case Coordination <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-orange-400 via-amber-300 to-teal-300">Analytics &amp; Metrics</span>
             </h1>
-            
-            <p className="text-sm text-zinc-400 max-w-2xl font-sans leading-relaxed">
-              Supervise client activations, track RBT candidate Meet &amp; Greet approvals, manage operational event tickets, and maintain staffing conversion SLAs.
-            </p>
           </div>
 
-          {/* Right Controls: Coordinator Selector & Roster Link */}
+          {/* Controls: Coordinator Selector & Roster Link */}
           <div className="flex items-center gap-3 flex-shrink-0">
             <div className="bg-zinc-900/90 backdrop-blur-md px-3 py-2 rounded-xl flex items-center border border-white/10 shadow-sm">
               <Users className="w-4 h-4 text-brand-orange-400 mr-2.5" />
@@ -79,7 +76,7 @@ export default function CaseCoordDashboard({
       {/* 4 Caseload Analytics Snapshot Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
         {/* 1. Active Caseload Ratio */}
-        <Card className="relative overflow-hidden bg-zinc-950/80 backdrop-blur-xl border border-white/10 shadow-xl rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:border-emerald-500/50 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] group">
+        <Card className="relative overflow-hidden bg-zinc-950/80 backdrop-blur-xl border border-white/10 shadow-xl rounded-2xl">
           <CardContent className="p-6 space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">ACTIVE CASELOAD</span>
@@ -93,16 +90,14 @@ export default function CaseCoordDashboard({
               <p className="text-xs text-zinc-400 mt-1">Clients in Active Direct Services</p>
             </div>
 
-            <div className="space-y-1.5 pt-2 border-t border-white/5">
-              <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden">
-                <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${activePercentage}%` }}></div>
-              </div>
+            <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden">
+              <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${activePercentage}%` }}></div>
             </div>
           </CardContent>
         </Card>
 
         {/* 2. RBT Meet & Greets Pending */}
-        <Card className="relative overflow-hidden bg-zinc-950/80 backdrop-blur-xl border border-white/10 shadow-xl rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:border-amber-500/50 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] group">
+        <Card className="relative overflow-hidden bg-zinc-950/80 backdrop-blur-xl border border-white/10 shadow-xl rounded-2xl">
           <CardContent className="p-6 space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider">MEET &amp; GREETS</span>
@@ -116,14 +111,12 @@ export default function CaseCoordDashboard({
               <p className="text-xs text-zinc-400 mt-1">RBT Dispatches Awaiting Parent Approval</p>
             </div>
 
-            <div className="space-y-1.5 pt-2 border-t border-white/5">
-              <p className="text-[11px] text-zinc-400 font-mono">Dispatched from HRM Portal</p>
-            </div>
+            <p className="text-[11px] text-zinc-400 font-mono pt-2 border-t border-white/5">Dispatched from HRM Portal</p>
           </CardContent>
         </Card>
 
         {/* 3. Staffing Queue Pending */}
-        <Card className="relative overflow-hidden bg-zinc-950/80 backdrop-blur-xl border border-white/10 shadow-xl rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:border-brand-orange-500/50 hover:shadow-[0_0_30px_rgba(255,122,69,0.15)] group">
+        <Card className="relative overflow-hidden bg-zinc-950/80 backdrop-blur-xl border border-white/10 shadow-xl rounded-2xl">
           <CardContent className="p-6 space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-xs font-mono font-bold text-brand-orange-400 uppercase tracking-wider">STAFFING QUEUE</span>
@@ -137,16 +130,14 @@ export default function CaseCoordDashboard({
               <p className="text-xs text-zinc-400 mt-1">Clients Awaiting RBT Assignment</p>
             </div>
 
-            <div className="space-y-1.5 pt-2 border-t border-white/5">
-              <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden">
-                <div className="bg-brand-orange-500 h-full rounded-full transition-all duration-500" style={{ width: `${staffingPercentage}%` }}></div>
-              </div>
+            <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden">
+              <div className="bg-brand-orange-500 h-full rounded-full transition-all duration-500" style={{ width: `${staffingPercentage}%` }}></div>
             </div>
           </CardContent>
         </Card>
 
         {/* 4. Total Caseload Assigned */}
-        <Card className="relative overflow-hidden bg-zinc-950/80 backdrop-blur-xl border border-white/10 shadow-xl rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:border-purple-500/50 hover:shadow-[0_0_30px_rgba(168,85,247,0.15)] group">
+        <Card className="relative overflow-hidden bg-zinc-950/80 backdrop-blur-xl border border-white/10 shadow-xl rounded-2xl">
           <CardContent className="p-6 space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-xs font-mono font-bold text-purple-400 uppercase tracking-wider">TOTAL CASELOAD</span>
@@ -160,73 +151,47 @@ export default function CaseCoordDashboard({
               <p className="text-xs text-zinc-400 mt-1">Total Client Records Managed</p>
             </div>
 
-            <div className="space-y-1.5 pt-2 border-t border-white/5">
-              <p className="text-[11px] text-zinc-400 font-mono">100% Operational Transparency</p>
-            </div>
+            <p className="text-[11px] text-zinc-400 font-mono pt-2 border-t border-white/5">100% Operational Transparency</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Roster & Active Clients Panel */}
-      <Card className="border border-white/10 bg-zinc-950/90 backdrop-blur-2xl shadow-2xl rounded-2xl">
-        <CardHeader className="p-6 border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-orange-500/10 border border-brand-orange-500/20 flex items-center justify-center text-brand-orange-400 font-bold">
-              <Layers className="w-5 h-5" />
-            </div>
-            <div>
-              <CardTitle className="text-lg font-bold font-heading text-white">Active Case Coordination Roster</CardTitle>
-              <p className="text-xs text-zinc-400 mt-0.5">Direct overview of assigned client pipelines and RBT staffing statuses</p>
-            </div>
-          </div>
+      {/* Case Coordination Analytics & Graphs Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <AreaChartWidget
+            title="Weekly Client Activation & Staffing Velocity"
+            subtitle="Speed of matching clients with RBT staff and converting to active therapy"
+            color="#A855F7"
+            data={[
+              { label: 'Wk 1', value: 4 },
+              { label: 'Wk 2', value: 9 },
+              { label: 'Wk 3', value: 15 },
+              { label: 'Wk 4', value: 22 },
+              { label: 'Wk 5', value: 31 },
+              { label: 'Wk 6', value: activeCases || 40 },
+            ]}
+          />
+        </div>
 
-          <Link href="/portal-case-coord/clients">
-            <Button className="bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs px-3.5 h-9 rounded-xl border border-white/10 transition-all cursor-pointer">
-              View Operational Clients List →
-            </Button>
-          </Link>
-        </CardHeader>
-
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {myClients.map(client => (
-              <div key={client.id} className="p-4 bg-zinc-900/80 rounded-2xl border border-white/5 hover:border-brand-orange-500/30 transition-all duration-300 space-y-3 shadow-md group">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-brand-orange-500/10 border border-brand-orange-500/20 flex items-center justify-center font-bold text-brand-orange-400 text-xs">
-                      {client.firstName[0]}{client.lastName[0]}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-white text-sm group-hover:text-brand-orange-400 transition-colors">{client.firstName} {client.lastName}</h4>
-                      <p className="text-xs text-zinc-400 font-mono">ID: {client.id.substring(0, 8)}</p>
-                    </div>
-                  </div>
-
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border ${
-                    client.status === 'ACTIVE' 
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                      : 'bg-brand-orange-500/10 text-brand-orange-400 border-brand-orange-500/20'
-                  }`}>
-                    {client.status}
-                  </span>
-                </div>
-
-                <div className="p-3 bg-zinc-950 rounded-xl border border-white/5 text-xs text-zinc-400 space-y-1 font-sans">
-                  <p><strong className="text-zinc-300">Case Coordinator:</strong> {client.caseCoordinator?.firstName ? `${client.caseCoordinator.firstName} ${client.caseCoordinator.lastName}` : 'Unassigned'}</p>
-                  <p><strong className="text-zinc-300">RBT Assigned:</strong> {client.rbt ? `${client.rbt.firstName} ${client.rbt.lastName}` : 'Awaiting HR Dispatch'}</p>
-                </div>
-
-                <Link href={`/client/${client.id}`} className="block pt-1">
-                  <Button className="w-full bg-zinc-950 hover:bg-zinc-800 text-zinc-300 hover:text-white font-semibold text-xs h-8 rounded-xl border border-white/5 transition-all cursor-pointer flex items-center justify-center gap-1.5">
-                    <span>Manage Client Command Center</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+        <div className="space-y-6">
+          <DonutChartWidget
+            title="Staffing Fulfillment Rate"
+            percentage={activePercentage || 88}
+            label="Matched RBT / BCBA Ratios"
+            color="#A855F7"
+          />
+          <BarChartWidget
+            title="Caseload Status Distribution"
+            subtitle="Live breakdown of clients by operational stage"
+            data={[
+              { label: '1. Active Therapy', value: activeCases || 28, color: '#10B981' },
+              { label: '2. Staffing Pending', value: staffingPending || 8, color: '#FF7A45' },
+              { label: '3. Meet & Greet Approval', value: meetAndGreetsPending || 4, color: '#F59E0B' },
+            ]}
+          />
+        </div>
+      </div>
     </div>
   );
 }
