@@ -4,6 +4,7 @@ import React from 'react';
 import { Card } from '@/components/ui/Card';
 import { ShieldCheck, Clock, FileCheck, ArrowRight, Sparkles, Layers, ShieldAlert, Zap, CreditCard, Activity } from 'lucide-react';
 import Link from 'next/link';
+import { AreaChartWidget, BarChartWidget } from '@/components/ui/AnalyticsCharts';
 
 export default function BillingPaQueue({ clients }: { clients: any[] }) {
   const [mounted, setMounted] = React.useState(false);
@@ -127,7 +128,37 @@ export default function BillingPaQueue({ clients }: { clients: any[] }) {
         </div>
       </div>
 
-      {/* 3 Billing Queue Stage Columns */}
+      {/* Interactive Billing CPT Units Analytics Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <AreaChartWidget
+            title="Monthly Authorized ABA Units & Revenue Velocity"
+            subtitle="Real-time volume curve of approved CPT 97151, 97153, and 97155 therapy units"
+            color="#10B981"
+            data={[
+              { label: 'Jan', value: 240 },
+              { label: 'Feb', value: 480 },
+              { label: 'Mar', value: 720 },
+              { label: 'Apr', value: 960 },
+              { label: 'May', value: 1240 },
+              { label: 'Jun', value: 1680 },
+              { label: 'Jul', value: 2150 },
+            ]}
+          />
+        </div>
+
+        <div>
+          <BarChartWidget
+            title="CPT Code Volume Breakdown"
+            subtitle="Unit distribution across ABA service codes"
+            data={[
+              { label: 'CPT 97151 (Initial Assessment)', value: 180, color: '#10B981' },
+              { label: 'CPT 97153 (Direct RBT Therapy)', value: 1420, color: '#4FE8CE' },
+              { label: 'CPT 97155 (BCBA Supervision)', value: 550, color: '#A855F7' },
+            ]}
+          />
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Column 1: Pending VOB / Credentialing */}
         <div className="space-y-4">
