@@ -41,6 +41,7 @@ export function DevToolsUI({
     <div className="fixed bottom-4 left-4 z-[9999]">
       {!isOpen ? (
         <button
+          suppressHydrationWarning
           onClick={() => setIsOpen(true)}
           className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center border-2 transition-all hover:scale-110 ${(currentImpersonatedId || currentImpersonatedRole) ? 'bg-red-600 border-red-400' : 'bg-zinc-800 border-zinc-600'}`}
           title="Developer Tools"

@@ -59,8 +59,9 @@ export default function NotificationBell({ userId }: { userId?: string }) {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        suppressHydrationWarning
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 text-zinc-300 hover:text-white transition-all cursor-pointer shadow-md"
+        className="relative p-2.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 text-zinc-400 hover:text-white transition-all cursor-pointer shadow-sm hover:scale-105"
         title="Notifications"
       >
         <Bell className="w-5 h-5" />

@@ -18,3 +18,10 @@ When writing code that touches a Prisma relation:
 
 ## Button Cursors
 When creating or modifying clickable elements (like <button>), always ensure they have the cursor-pointer class when active, and cursor-not-allowed when disabled. Do not leave the cursor as the default arrow when an element is interactive.
+
+## World-Class Ultra-Premium UI Directives (MANDATORY)
+1. **Never Output Basic or Plain UIs:** Every dashboard, card, table, and portal must look like a top-tier modern SaaS application (Linear, Stripe, Vercel dark-mode style). Plain gray boxes, raw unstyled tables, or basic white cards are strictly prohibited.
+2. **Glassmorphism & Radial Lighting:** Use deep multi-layered backgrounds (`bg-zinc-950/80`, `backdrop-blur-xl`), 1px translucent borders (`border-white/10 hover:border-brand-orange-500/50`), and subtle radial gradient glows.
+3. **Rich Typography & Hierarchy:** Combine `font-heading` for titles, `font-mono` for metadata/timestamps/IDs, and high-contrast text (`text-white`, `text-zinc-400`).
+4. **Micro-Interactions & Hover FX:** All interactive cards must feature smooth transitions (`transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl hover:border-brand-orange-500/40`).
+5. **Vibrant Status Badges & Glows:** Use glowing live pulse dots (`.dot-live`), status badges with 10% opacity backgrounds and matching border outlines (e.g. `bg-green-500/10 text-green-400 border border-green-500/20`), and Lucide icons for visual clarity.
